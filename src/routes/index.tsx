@@ -10,7 +10,7 @@ function HomePage() {
   const aboutRef = useInView()
   const useCasesRef = useInView()
   const featuresRef = useInView()
-  const statsRef = useInView({ threshold: 0.3 })
+
   const faqRef = useInView()
   const ctaRef = useInView({ threshold: 0.3 })
 
@@ -182,7 +182,7 @@ function HomePage() {
             </div>
 
             {/* Guitar illustration below sticky text — scrolls naturally */}
-            <svg className="mx-auto mt-10 opacity-[0.07] lg:mx-0" width="120" height="300" viewBox="0 0 200 500" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg className="mx-auto mt-10 opacity-[0.18] lg:mx-0" width="180" height="450" viewBox="0 0 200 500" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M88 10 C88 4, 92 0, 100 0 C108 0, 112 4, 112 10 L112 70 L88 70 Z" />
               <line x1="88" y1="18" x2="72" y2="18" /><circle cx="68" cy="18" r="4" />
               <line x1="88" y1="34" x2="72" y2="34" /><circle cx="68" cy="34" r="4" />
@@ -269,19 +269,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* ━━━ STATS ━━━ */}
-      <section
-        ref={statsRef.ref as React.RefObject<HTMLDivElement>}
-        className="relative z-10 px-5 py-16"
-      >
-        <div className="cont">
-          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl ring-1 ring-white/5 sm:grid-cols-4">
-            {STATS.map((stat, i) => (
-              <StatCell key={stat.label} stat={stat} index={i} parentInView={statsRef.inView} />
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ━━━ FAQ ━━━ */}
       <section
@@ -429,6 +416,16 @@ const USE_CASES = [
     title: 'Writers & Journalists',
     desc: 'Dictate articles, interview subjects, and draft stories — all with perfect transcription.',
   },
+  {
+    icon: 'podium',
+    title: 'Public Speaking Practice',
+    desc: 'Rehearse presentations and track filler words like "um", "like", and "you know". Build confidence by seeing exactly where you stumble.',
+  },
+  {
+    icon: 'journal',
+    title: 'Voice Diary',
+    desc: 'Speak your thoughts and let Bard turn them into a written diary. Capture your day hands-free, anytime, anywhere.',
+  },
 ]
 
 const FEATURES = [
@@ -462,19 +459,14 @@ const FEATURES = [
   },
 ]
 
-const STATS = [
-  { numeric: 992, format: (n: number) => `${(n / 10).toFixed(1)}%`, label: 'Accuracy' },
-  { numeric: 50, format: (n: number) => `${n}+`, label: 'Languages' },
-  { numeric: null, format: null, fallback: '<1s', label: 'Latency' },
-  { numeric: 100, format: (n: number) => `${n}K+`, label: 'Users' },
-]
 
 const FAQ_ITEMS = [
-  { q: 'How accurate is Bard?', a: 'Bard achieves 99.2% accuracy on standard English speech, with strong performance across accents and dialects. Accuracy varies by language and audio quality.' },
+  { q: 'How accurate is Bard?', a: 'Bard uses state-of-the-art speech recognition models with strong performance across accents and dialects. Accuracy varies by language and audio quality.' },
   { q: 'Is my data private?', a: 'Yes. All audio is encrypted in transit and at rest. We process your recordings in real-time and do not store them after transcription is complete.' },
-  { q: 'What languages are supported?', a: 'We support 50+ languages including English, Spanish, French, German, Japanese, Mandarin, Arabic, Hindi, and many more. Language detection is automatic.' },
+  { q: 'What languages are supported?', a: 'We support a wide range of languages including English, Spanish, French, German, Japanese, Mandarin, Arabic, Hindi, and many more. Language detection is automatic.' },
   { q: 'Can I use Bard with my team?', a: 'Absolutely. Our Teams plan includes shared workspaces, collaborative editing, and centralized billing for organizations of any size.' },
-  { q: 'Is there a free plan?', a: 'Yes. The free plan includes 60 minutes of transcription per month. No credit card required to get started.' },
+  { q: 'How does public speaking practice work?', a: 'Record yourself rehearsing a speech or presentation. Bard transcribes it in real time and highlights filler words like "um", "like", and "you know" so you can see exactly where you stumble and improve over time.' },
+  { q: 'Can I use Bard as a voice diary?', a: 'Yes. Just hit record and speak your thoughts. Bard transcribes everything into a written diary entry you can review, search, and revisit anytime — completely hands-free.' },
 ]
 
 /* ── Components ── */
@@ -638,55 +630,6 @@ function FeatureCard({ f, i }: { f: typeof FEATURES[number]; i: number }) {
   )
 }
 
-/* Animated counter hook */
-function useCounter(target: number, duration: number, isRunning: boolean) {
-  const [count, setCount] = useState(0)
-  const raf = useRef(0)
-
-  useEffect(() => {
-    if (!isRunning) return
-    const start = performance.now()
-    const tick = (now: number) => {
-      const elapsed = now - start
-      const progress = Math.min(elapsed / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setCount(Math.floor(eased * target))
-      if (progress < 1) raf.current = requestAnimationFrame(tick)
-      else setCount(target)
-    }
-    raf.current = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf.current)
-  }, [target, duration, isRunning])
-
-  return count
-}
-
-/* Stat cell with counter animation */
-function StatCell({
-  stat,
-  index,
-  parentInView,
-}: {
-  stat: typeof STATS[number]
-  index: number
-  parentInView: boolean
-}) {
-  const count = useCounter(stat.numeric ?? 0, 1800, parentInView && stat.numeric !== null)
-
-  return (
-    <div
-      className={`bg-[#161616] px-6 py-8 text-center ${parentInView ? 'counter-pop' : 'opacity-0'}`}
-      style={{ '--delay': `${index * 150}ms` } as React.CSSProperties}
-    >
-      <p className="mb-1 text-3xl font-semibold text-white sm:text-4xl">
-        {stat.numeric !== null && parentInView ? stat.format!(count) : stat.fallback ?? ''}
-      </p>
-      <p className="m-0 text-xs font-medium uppercase tracking-wider text-white/30">
-        {stat.label}
-      </p>
-    </div>
-  )
-}
 
 /* Magnetic button effect */
 function MagneticButton({
@@ -794,6 +737,10 @@ function FeatureIcon({ name }: { name: string }) {
       return <svg {...props}><rect width="20" height="14" x="2" y="7" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg>
     case 'pen':
       return <svg {...props}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
+    case 'podium':
+      return <svg {...props}><path d="M12 2v8" /><path d="M5 10h14" /><path d="M8 10v12" /><path d="M16 10v12" /><path d="M5 22h14" /><circle cx="12" cy="6" r="2" /></svg>
+    case 'journal':
+      return <svg {...props}><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" /><path d="M8 7h8" /><path d="M8 11h6" /></svg>
     default:
       return null
   }
