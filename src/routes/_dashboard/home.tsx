@@ -6,17 +6,19 @@ import {
   PodiumIcon,
   File01Icon,
   Clock01Icon,
-  HashtagIcon,
-  FireIcon,
 } from '@hugeicons/core-free-icons'
 import type { IconSvgElement } from '@hugeicons/react'
-import { MOCK_USER, MOCK_USAGE_STATS, MOCK_TRANSCRIPTIONS } from '../../data/mock-dashboard'
+import { useAuth } from '../../lib/auth'
+import { useTranscriptions } from '../../lib/api-hooks'
 
-export const Route = createFileRoute('/dashboard/')({
+export const Route = createFileRoute('/_dashboard/home')({
   component: DashboardHome,
 })
 
 function DashboardHome() {
+  const { user } = useAuth()
+  const { data: recent = [], isLoading } = useTranscriptions(undefined, 5)
+
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
   const dateStr = new Date().toLocaleDateString('en-US', {
@@ -26,12 +28,14 @@ function DashboardHome() {
     day: 'numeric',
   })
 
+  const firstName = user?.name?.split(' ')[0] ?? 'there'
+
   return (
     <div className="mx-auto max-w-5xl space-y-8">
       {/* Greeting */}
       <div className="animate-fade-up">
         <h1 className="text-2xl font-semibold text-white">
-          {greeting}, {MOCK_USER.name.split(' ')[0]}
+          {greeting}, {firstName}
         </h1>
         <p className="mt-1 text-sm text-white/40">{dateStr}</p>
       </div>
@@ -39,7 +43,7 @@ function DashboardHome() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Link
-          to="/dashboard/transcription"
+          to="/transcription"
           className="card-hover group flex items-center gap-4 rounded-2xl bg-[#161616] p-5 ring-1 ring-white/5 no-underline transition hover:ring-white/10 animate-fade-up"
           style={{ animationDelay: '50ms' }}
         >
@@ -53,7 +57,7 @@ function DashboardHome() {
         </Link>
 
         <Link
-          to="/dashboard/diary"
+          to="/diary"
           className="card-hover group flex items-center gap-4 rounded-2xl bg-[#161616] p-5 ring-1 ring-white/5 no-underline transition hover:ring-white/10 animate-fade-up"
           style={{ animationDelay: '100ms' }}
         >
@@ -67,7 +71,7 @@ function DashboardHome() {
         </Link>
 
         <Link
-          to="/dashboard/speaking"
+          to="/speaking"
           className="card-hover group flex items-center gap-4 rounded-2xl bg-[#161616] p-5 ring-1 ring-white/5 no-underline transition hover:ring-white/10 animate-fade-up"
           style={{ animationDelay: '150ms' }}
         >
@@ -82,41 +86,57 @@ function DashboardHome() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon={File01Icon} label="Transcriptions" value={MOCK_USAGE_STATS.totalTranscriptions} delay={200} />
-        <StatCard icon={Clock01Icon} label="Minutes" value={MOCK_USAGE_STATS.totalMinutes} delay={250} />
-        <StatCard icon={HashtagIcon} label="Words" value={MOCK_USAGE_STATS.wordsTranscribed.toLocaleString()} delay={300} />
-        <StatCard icon={FireIcon} label="Day Streak" value={MOCK_USAGE_STATS.streak} delay={350} />
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-2">
+        <StatCard icon={File01Icon} label="Transcriptions" value={recent.length} delay={200} />
+        <StatCard icon={Clock01Icon} label="Completed" value={recent.filter(t => t.status === 'completed').length} delay={250} />
       </div>
 
       {/* Recent */}
       <section className="animate-fade-up" style={{ animationDelay: '300ms' }}>
         <h2 className="mb-4 text-lg font-semibold text-white">Recent</h2>
-        <div className="space-y-3">
-          {MOCK_TRANSCRIPTIONS.map((t, i) => (
-            <div
-              key={t.id}
-              className="card-hover rounded-2xl bg-[#161616] p-5 ring-1 ring-white/5 animate-fade-up cursor-pointer"
-              style={{ animationDelay: `${350 + i * 50}ms` }}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-medium text-white">{t.title}</h3>
-                    <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-wider text-white/30">
-                      {t.type}
-                    </span>
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/10 border-t-white/60" />
+          </div>
+        ) : recent.length === 0 ? (
+          <div className="rounded-2xl bg-[#161616] p-8 text-center ring-1 ring-white/5">
+            <p className="text-sm text-white/40">No transcriptions yet. Record something to get started!</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {recent.map((t, i) => (
+              <div
+                key={t.id}
+                className="card-hover rounded-2xl bg-[#161616] p-5 ring-1 ring-white/5 animate-fade-up cursor-pointer"
+                style={{ animationDelay: `${350 + i * 50}ms` }}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-medium text-white">
+                        {t.summary?.slice(0, 60) || t.audio_filename || 'Untitled'}
+                      </h3>
+                      <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-wider text-white/30">
+                        {t.type}
+                      </span>
+                      {t.status !== 'completed' && (
+                        <span className="rounded-full bg-yellow-500/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-yellow-400/60">
+                          {t.status}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 truncate text-xs text-white/40">
+                      {t.cleaned_transcript?.slice(0, 100) || t.original_transcript?.slice(0, 100) || 'Processing...'}
+                    </p>
                   </div>
-                  <p className="mt-1 truncate text-xs text-white/40">{t.text}</p>
-                </div>
-                <div className="text-right text-xs text-white/30">
-                  <p>{t.duration}</p>
-                  <p className="mt-0.5">{t.date}</p>
+                  <div className="text-right text-xs text-white/30">
+                    <p>{new Date(t.created_at).toLocaleDateString()}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   )

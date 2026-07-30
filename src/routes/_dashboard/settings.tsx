@@ -1,29 +1,53 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { VolumeHighIcon, Alert02Icon, Cancel01Icon, Add01Icon } from '@hugeicons/core-free-icons'
 import type { IconSvgElement } from '@hugeicons/react'
-import { FILLER_WORDS } from '../../data/mock-dashboard'
 
-export const Route = createFileRoute('/dashboard/settings')({
+export const Route = createFileRoute('/_dashboard/settings')({
   component: SettingsPage,
 })
 
+const DEFAULT_FILLER_WORDS = ['um', 'uh', 'like', 'you know', 'so', 'actually', 'basically', 'literally', 'right', 'I mean']
+
 function SettingsPage() {
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
-  const [fillerWords, setFillerWords] = useState<string[]>([...FILLER_WORDS])
+  const [fillerWords, setFillerWords] = useState<string[]>(DEFAULT_FILLER_WORDS)
   const [newWord, setNewWord] = useState('')
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('bard_filler_words')
+    if (stored) {
+      try {
+        setFillerWords(JSON.parse(stored))
+      } catch { /* ignore */ }
+    }
+    const speed = localStorage.getItem('bard_playback_speed')
+    if (speed) setPlaybackSpeed(Number(speed))
+  }, [])
+
+  // Persist filler words
+  const updateFillerWords = (words: string[]) => {
+    setFillerWords(words)
+    localStorage.setItem('bard_filler_words', JSON.stringify(words))
+  }
 
   const addWord = () => {
     const word = newWord.trim().toLowerCase()
     if (word && !fillerWords.includes(word)) {
-      setFillerWords([...fillerWords, word])
+      updateFillerWords([...fillerWords, word])
       setNewWord('')
     }
   }
 
   const removeWord = (word: string) => {
-    setFillerWords(fillerWords.filter((w) => w !== word))
+    updateFillerWords(fillerWords.filter((w) => w !== word))
+  }
+
+  const handleSpeedChange = (speed: number) => {
+    setPlaybackSpeed(speed)
+    localStorage.setItem('bard_playback_speed', String(speed))
   }
 
   return (
@@ -40,7 +64,7 @@ function SettingsPage() {
               max="2"
               step="0.25"
               value={playbackSpeed}
-              onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
+              onChange={(e) => handleSpeedChange(Number(e.target.value))}
               className="w-32 accent-white"
             />
           </SettingsRow>

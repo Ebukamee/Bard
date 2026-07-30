@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect, useRef } from 'react'
 import StarField from '../components/StarField'
+import { useAuth } from '../lib/auth'
 
 export const Route = createFileRoute('/signup')({
   component: SignUp,
@@ -143,6 +144,61 @@ function VoiceToTextDemo() {
 }
 
 function SignUp() {
+  const { isAuthenticated, isLoading, requestMagicLink, loginWithGoogle } = useAuth()
+  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+  const [sent, setSent] = useState(false)
+  const [error, setError] = useState('')
+  const [googleError, setGoogleError] = useState('')
+  const [googleLoading, setGoogleLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate({ to: '/home' })
+    }
+  }, [isLoading, isAuthenticated, navigate])
+
+  const handleGoogleLogin = () => {
+    setGoogleError('')
+    const client = google.accounts.oauth2.initCodeClient({
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      scope: 'openid email profile',
+      ux_mode: 'popup',
+      callback: async (response: { code?: string; error?: string }) => {
+        if (response.error || !response.code) {
+          setGoogleError('Google sign-in was cancelled or failed.')
+          return
+        }
+        setGoogleLoading(true)
+        try {
+          await loginWithGoogle(response.code)
+          navigate({ to: '/home' })
+        } catch {
+          setGoogleError('Google sign-in failed. Please try again.')
+        } finally {
+          setGoogleLoading(false)
+        }
+      },
+    })
+    client.requestCode()
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email.trim()) return
+    setSubmitting(true)
+    setError('')
+    try {
+      await requestMagicLink(email.trim())
+      setSent(true)
+    } catch {
+      setError('Failed to send magic link. Try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <main className="relative flex min-h-[calc(100vh-140px)] items-center justify-center overflow-x-clip px-5 py-16">
       <StarField count={40} />
@@ -177,16 +233,25 @@ function SignUp() {
             {/* Google */}
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+              onClick={handleGoogleLogin}
+              disabled={googleLoading}
+              className="flex w-full items-center justify-center gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10 disabled:opacity-50"
             >
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" fill="#4285F4" />
-                <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.26c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z" fill="#34A853" />
-                <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.997 8.997 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05" />
-                <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z" fill="#EA4335" />
-              </svg>
-              Continue with Google
+              {googleLoading ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/10 border-t-white/60" />
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" fill="#4285F4" />
+                  <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.26c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z" fill="#34A853" />
+                  <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.997 8.997 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05" />
+                  <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z" fill="#EA4335" />
+                </svg>
+              )}
+              {googleLoading ? 'Signing in...' : 'Continue with Google'}
             </button>
+            {googleError && (
+              <p className="mt-2 text-center text-xs text-red-400">{googleError}</p>
+            )}
 
             <div className="my-6 flex items-center gap-3">
               <div className="h-px flex-1 bg-white/10" />
@@ -195,25 +260,47 @@ function SignUp() {
             </div>
 
             {/* Magic link */}
-            <form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-4">
-              <div>
-                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/40">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/20 outline-none transition focus:border-white/25 focus:ring-1 focus:ring-white/10"
-                />
+            {sent ? (
+              <div className="rounded-xl bg-white/5 p-5 text-center">
+                <p className="text-sm font-medium text-white">Check your email</p>
+                <p className="mt-2 text-xs text-white/40">
+                  We sent a sign-in link to <span className="text-white/60">{email}</span>
+                </p>
+                <button
+                  onClick={() => setSent(false)}
+                  className="mt-4 text-xs text-white/40 transition hover:text-white/60"
+                >
+                  Use a different email
+                </button>
               </div>
-              <button
-                type="submit"
-                className="w-full rounded-full py-3 text-sm font-medium transition hover:-translate-y-0.5"
-                style={{ background: '#ffffff', color: '#040404' }}
-              >
-                Send magic link
-              </button>
-            </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-white/40">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/20 outline-none transition focus:border-white/25 focus:ring-1 focus:ring-white/10"
+                  />
+                </div>
+                {error && (
+                  <p className="text-xs text-red-400">{error}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full rounded-full py-3 text-sm font-medium transition hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
+                  style={{ background: '#ffffff', color: '#040404' }}
+                >
+                  {submitting ? 'Sending...' : 'Send magic link'}
+                </button>
+              </form>
+            )}
           </div>
 
           <p className="mt-6 text-center text-sm text-white/40 lg:text-left">

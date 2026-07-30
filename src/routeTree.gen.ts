@@ -12,20 +12,22 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as McpRouteImport } from './routes/mcp'
-import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
 import { Route as DemoTableRouteImport } from './routes/demo/table'
 import { Route as DemoStoreRouteImport } from './routes/demo/store'
 import { Route as DemoMcpTodosRouteImport } from './routes/demo/mcp-todos'
-import { Route as DashboardTranscriptionRouteImport } from './routes/dashboard/transcription'
-import { Route as DashboardSpeakingRouteImport } from './routes/dashboard/speaking'
-import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
-import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
-import { Route as DashboardDiaryRouteImport } from './routes/dashboard/diary'
-import { Route as DashboardAudioRouteImport } from './routes/dashboard/audio'
+import { Route as AuthVerifyRouteImport } from './routes/auth/verify'
+import { Route as AuthSetupRouteImport } from './routes/auth/setup'
+import { Route as DashboardTranscriptionRouteImport } from './routes/_dashboard/transcription'
+import { Route as DashboardSpeakingRouteImport } from './routes/_dashboard/speaking'
+import { Route as DashboardSettingsRouteImport } from './routes/_dashboard/settings'
+import { Route as DashboardProfileRouteImport } from './routes/_dashboard/profile'
+import { Route as DashboardHomeRouteImport } from './routes/_dashboard/home'
+import { Route as DashboardDiaryRouteImport } from './routes/_dashboard/diary'
+import { Route as DashboardAudioRouteImport } from './routes/_dashboard/audio'
 import { Route as DemoSentryTestingRouteImport } from './routes/demo/sentry.testing'
 import { Route as DemoFormSimpleRouteImport } from './routes/demo/form.simple'
 import { Route as DemoFormAddressRouteImport } from './routes/demo/form.address'
@@ -46,25 +48,19 @@ const McpRoute = McpRouteImport.update({
   path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/_dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardIndexRoute = DashboardIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardRoute,
 } as any)
 const DemoTanstackQueryRoute = DemoTanstackQueryRouteImport.update({
   id: '/demo/tanstack-query',
@@ -86,6 +82,16 @@ const DemoMcpTodosRoute = DemoMcpTodosRouteImport.update({
   path: '/demo/mcp-todos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthVerifyRoute = AuthVerifyRouteImport.update({
+  id: '/auth/verify',
+  path: '/auth/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthSetupRoute = AuthSetupRouteImport.update({
+  id: '/auth/setup',
+  path: '/auth/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardTranscriptionRoute = DashboardTranscriptionRouteImport.update({
   id: '/transcription',
   path: '/transcription',
@@ -104,6 +110,11 @@ const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
 const DashboardProfileRoute = DashboardProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardHomeRoute = DashboardHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardDiaryRoute = DashboardDiaryRouteImport.update({
@@ -140,21 +151,22 @@ const DemoApiMcpTodosRoute = DemoApiMcpTodosRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/dashboard': typeof DashboardRouteWithChildren
   '/mcp': typeof McpRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
-  '/dashboard/audio': typeof DashboardAudioRoute
-  '/dashboard/diary': typeof DashboardDiaryRoute
-  '/dashboard/profile': typeof DashboardProfileRoute
-  '/dashboard/settings': typeof DashboardSettingsRoute
-  '/dashboard/speaking': typeof DashboardSpeakingRoute
-  '/dashboard/transcription': typeof DashboardTranscriptionRoute
+  '/audio': typeof DashboardAudioRoute
+  '/diary': typeof DashboardDiaryRoute
+  '/home': typeof DashboardHomeRoute
+  '/profile': typeof DashboardProfileRoute
+  '/settings': typeof DashboardSettingsRoute
+  '/speaking': typeof DashboardSpeakingRoute
+  '/transcription': typeof DashboardTranscriptionRoute
+  '/auth/setup': typeof AuthSetupRoute
+  '/auth/verify': typeof AuthVerifyRoute
   '/demo/mcp-todos': typeof DemoMcpTodosRoute
   '/demo/store': typeof DemoStoreRoute
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
-  '/dashboard/': typeof DashboardIndexRoute
   '/demo/api/mcp-todos': typeof DemoApiMcpTodosRoute
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
@@ -166,17 +178,19 @@ export interface FileRoutesByTo {
   '/mcp': typeof McpRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
-  '/dashboard/audio': typeof DashboardAudioRoute
-  '/dashboard/diary': typeof DashboardDiaryRoute
-  '/dashboard/profile': typeof DashboardProfileRoute
-  '/dashboard/settings': typeof DashboardSettingsRoute
-  '/dashboard/speaking': typeof DashboardSpeakingRoute
-  '/dashboard/transcription': typeof DashboardTranscriptionRoute
+  '/audio': typeof DashboardAudioRoute
+  '/diary': typeof DashboardDiaryRoute
+  '/home': typeof DashboardHomeRoute
+  '/profile': typeof DashboardProfileRoute
+  '/settings': typeof DashboardSettingsRoute
+  '/speaking': typeof DashboardSpeakingRoute
+  '/transcription': typeof DashboardTranscriptionRoute
+  '/auth/setup': typeof AuthSetupRoute
+  '/auth/verify': typeof AuthVerifyRoute
   '/demo/mcp-todos': typeof DemoMcpTodosRoute
   '/demo/store': typeof DemoStoreRoute
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
-  '/dashboard': typeof DashboardIndexRoute
   '/demo/api/mcp-todos': typeof DemoApiMcpTodosRoute
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
@@ -185,22 +199,24 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_dashboard': typeof DashboardRouteWithChildren
   '/about': typeof AboutRoute
-  '/dashboard': typeof DashboardRouteWithChildren
   '/mcp': typeof McpRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
-  '/dashboard/audio': typeof DashboardAudioRoute
-  '/dashboard/diary': typeof DashboardDiaryRoute
-  '/dashboard/profile': typeof DashboardProfileRoute
-  '/dashboard/settings': typeof DashboardSettingsRoute
-  '/dashboard/speaking': typeof DashboardSpeakingRoute
-  '/dashboard/transcription': typeof DashboardTranscriptionRoute
+  '/_dashboard/audio': typeof DashboardAudioRoute
+  '/_dashboard/diary': typeof DashboardDiaryRoute
+  '/_dashboard/home': typeof DashboardHomeRoute
+  '/_dashboard/profile': typeof DashboardProfileRoute
+  '/_dashboard/settings': typeof DashboardSettingsRoute
+  '/_dashboard/speaking': typeof DashboardSpeakingRoute
+  '/_dashboard/transcription': typeof DashboardTranscriptionRoute
+  '/auth/setup': typeof AuthSetupRoute
+  '/auth/verify': typeof AuthVerifyRoute
   '/demo/mcp-todos': typeof DemoMcpTodosRoute
   '/demo/store': typeof DemoStoreRoute
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
-  '/dashboard/': typeof DashboardIndexRoute
   '/demo/api/mcp-todos': typeof DemoApiMcpTodosRoute
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
@@ -211,21 +227,22 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
-    | '/dashboard'
     | '/mcp'
     | '/signin'
     | '/signup'
-    | '/dashboard/audio'
-    | '/dashboard/diary'
-    | '/dashboard/profile'
-    | '/dashboard/settings'
-    | '/dashboard/speaking'
-    | '/dashboard/transcription'
+    | '/audio'
+    | '/diary'
+    | '/home'
+    | '/profile'
+    | '/settings'
+    | '/speaking'
+    | '/transcription'
+    | '/auth/setup'
+    | '/auth/verify'
     | '/demo/mcp-todos'
     | '/demo/store'
     | '/demo/table'
     | '/demo/tanstack-query'
-    | '/dashboard/'
     | '/demo/api/mcp-todos'
     | '/demo/form/address'
     | '/demo/form/simple'
@@ -237,17 +254,19 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/signin'
     | '/signup'
-    | '/dashboard/audio'
-    | '/dashboard/diary'
-    | '/dashboard/profile'
-    | '/dashboard/settings'
-    | '/dashboard/speaking'
-    | '/dashboard/transcription'
+    | '/audio'
+    | '/diary'
+    | '/home'
+    | '/profile'
+    | '/settings'
+    | '/speaking'
+    | '/transcription'
+    | '/auth/setup'
+    | '/auth/verify'
     | '/demo/mcp-todos'
     | '/demo/store'
     | '/demo/table'
     | '/demo/tanstack-query'
-    | '/dashboard'
     | '/demo/api/mcp-todos'
     | '/demo/form/address'
     | '/demo/form/simple'
@@ -255,22 +274,24 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/_dashboard'
     | '/about'
-    | '/dashboard'
     | '/mcp'
     | '/signin'
     | '/signup'
-    | '/dashboard/audio'
-    | '/dashboard/diary'
-    | '/dashboard/profile'
-    | '/dashboard/settings'
-    | '/dashboard/speaking'
-    | '/dashboard/transcription'
+    | '/_dashboard/audio'
+    | '/_dashboard/diary'
+    | '/_dashboard/home'
+    | '/_dashboard/profile'
+    | '/_dashboard/settings'
+    | '/_dashboard/speaking'
+    | '/_dashboard/transcription'
+    | '/auth/setup'
+    | '/auth/verify'
     | '/demo/mcp-todos'
     | '/demo/store'
     | '/demo/table'
     | '/demo/tanstack-query'
-    | '/dashboard/'
     | '/demo/api/mcp-todos'
     | '/demo/form/address'
     | '/demo/form/simple'
@@ -279,11 +300,13 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
   DashboardRoute: typeof DashboardRouteWithChildren
+  AboutRoute: typeof AboutRoute
   McpRoute: typeof McpRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
+  AuthSetupRoute: typeof AuthSetupRoute
+  AuthVerifyRoute: typeof AuthVerifyRoute
   DemoMcpTodosRoute: typeof DemoMcpTodosRoute
   DemoStoreRoute: typeof DemoStoreRoute
   DemoTableRoute: typeof DemoTableRoute
@@ -317,18 +340,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/about': {
       id: '/about'
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_dashboard': {
+      id: '/_dashboard'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -337,13 +360,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/dashboard/': {
-      id: '/dashboard/'
-      path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof DashboardRoute
     }
     '/demo/tanstack-query': {
       id: '/demo/tanstack-query'
@@ -373,45 +389,66 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoMcpTodosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/transcription': {
-      id: '/dashboard/transcription'
+    '/auth/verify': {
+      id: '/auth/verify'
+      path: '/auth/verify'
+      fullPath: '/auth/verify'
+      preLoaderRoute: typeof AuthVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/setup': {
+      id: '/auth/setup'
+      path: '/auth/setup'
+      fullPath: '/auth/setup'
+      preLoaderRoute: typeof AuthSetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_dashboard/transcription': {
+      id: '/_dashboard/transcription'
       path: '/transcription'
-      fullPath: '/dashboard/transcription'
+      fullPath: '/transcription'
       preLoaderRoute: typeof DashboardTranscriptionRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/speaking': {
-      id: '/dashboard/speaking'
+    '/_dashboard/speaking': {
+      id: '/_dashboard/speaking'
       path: '/speaking'
-      fullPath: '/dashboard/speaking'
+      fullPath: '/speaking'
       preLoaderRoute: typeof DashboardSpeakingRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/settings': {
-      id: '/dashboard/settings'
+    '/_dashboard/settings': {
+      id: '/_dashboard/settings'
       path: '/settings'
-      fullPath: '/dashboard/settings'
+      fullPath: '/settings'
       preLoaderRoute: typeof DashboardSettingsRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/profile': {
-      id: '/dashboard/profile'
+    '/_dashboard/profile': {
+      id: '/_dashboard/profile'
       path: '/profile'
-      fullPath: '/dashboard/profile'
+      fullPath: '/profile'
       preLoaderRoute: typeof DashboardProfileRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/diary': {
-      id: '/dashboard/diary'
+    '/_dashboard/home': {
+      id: '/_dashboard/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof DashboardHomeRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/diary': {
+      id: '/_dashboard/diary'
       path: '/diary'
-      fullPath: '/dashboard/diary'
+      fullPath: '/diary'
       preLoaderRoute: typeof DashboardDiaryRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/audio': {
-      id: '/dashboard/audio'
+    '/_dashboard/audio': {
+      id: '/_dashboard/audio'
       path: '/audio'
-      fullPath: '/dashboard/audio'
+      fullPath: '/audio'
       preLoaderRoute: typeof DashboardAudioRouteImport
       parentRoute: typeof DashboardRoute
     }
@@ -449,21 +486,21 @@ declare module '@tanstack/react-router' {
 interface DashboardRouteChildren {
   DashboardAudioRoute: typeof DashboardAudioRoute
   DashboardDiaryRoute: typeof DashboardDiaryRoute
+  DashboardHomeRoute: typeof DashboardHomeRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardSpeakingRoute: typeof DashboardSpeakingRoute
   DashboardTranscriptionRoute: typeof DashboardTranscriptionRoute
-  DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAudioRoute: DashboardAudioRoute,
   DashboardDiaryRoute: DashboardDiaryRoute,
+  DashboardHomeRoute: DashboardHomeRoute,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardSpeakingRoute: DashboardSpeakingRoute,
   DashboardTranscriptionRoute: DashboardTranscriptionRoute,
-  DashboardIndexRoute: DashboardIndexRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
@@ -472,11 +509,13 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
   DashboardRoute: DashboardRouteWithChildren,
+  AboutRoute: AboutRoute,
   McpRoute: McpRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
+  AuthSetupRoute: AuthSetupRoute,
+  AuthVerifyRoute: AuthVerifyRoute,
   DemoMcpTodosRoute: DemoMcpTodosRoute,
   DemoStoreRoute: DemoStoreRoute,
   DemoTableRoute: DemoTableRoute,

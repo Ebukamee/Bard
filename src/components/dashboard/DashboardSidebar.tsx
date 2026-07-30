@@ -13,19 +13,20 @@ import {
   SidebarLeft01Icon,
   Logout01Icon,
 } from '@hugeicons/core-free-icons'
-import { MOCK_USER } from '../../data/mock-dashboard'
+import { useAuth } from '../../lib/auth'
+import { useNavigate } from '@tanstack/react-router'
 
 const NAV_ITEMS = [
-  { to: '/dashboard' as const, label: 'Dashboard', icon: DashboardSquare01Icon, exact: true },
-  { to: '/dashboard/diary' as const, label: 'Diary', icon: Book02Icon },
-  { to: '/dashboard/transcription' as const, label: 'Transcription', icon: Mic01Icon },
-  { to: '/dashboard/audio' as const, label: 'Audio & Songs', icon: MusicNote01Icon },
-  { to: '/dashboard/speaking' as const, label: 'Public Speaking', icon: PodiumIcon },
+  { to: '/home' as const, label: 'Dashboard', icon: DashboardSquare01Icon, exact: true },
+  { to: '/diary' as const, label: 'Diary', icon: Book02Icon },
+  { to: '/transcription' as const, label: 'Transcription', icon: Mic01Icon },
+  { to: '/audio' as const, label: 'Audio & Songs', icon: MusicNote01Icon },
+  { to: '/speaking' as const, label: 'Public Speaking', icon: PodiumIcon },
 ]
 
 const BOTTOM_NAV = [
-  { to: '/dashboard/settings' as const, label: 'Settings', icon: Settings02Icon },
-  { to: '/dashboard/profile' as const, label: 'Profile', icon: UserIcon },
+  { to: '/settings' as const, label: 'Settings', icon: Settings02Icon },
+  { to: '/profile' as const, label: 'Profile', icon: UserIcon },
 ]
 
 export default function DashboardSidebar({
@@ -39,10 +40,9 @@ export default function DashboardSidebar({
   collapsed: boolean
   onToggleCollapse: () => void
 }) {
-  const initials = MOCK_USER.name
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
+  const { user } = useAuth()
+  const name = user?.name ?? 'User'
+  const initial = name.charAt(0).toUpperCase()
 
   return (
     <>
@@ -149,15 +149,17 @@ export default function DashboardSidebar({
         </div>
 
         {/* User info */}
-        <UserMenu initials={initials} collapsed={collapsed} />
+        <UserMenu initial={initial} collapsed={collapsed} userName={name} userEmail={user?.email ?? ''} userAvatar={user?.avatar_url} />
       </aside>
     </>
   )
 }
 
-function UserMenu({ initials, collapsed }: { initials: string; collapsed: boolean }) {
+function UserMenu({ initial, collapsed, userName, userEmail, userAvatar }: { initial: string; collapsed: boolean; userName: string; userEmail: string; userAvatar?: string }) {
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const { logout } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (!open) return
@@ -177,12 +179,16 @@ function UserMenu({ initials, collapsed }: { initials: string; collapsed: boolea
         onClick={() => setOpen(!open)}
         className={`flex items-center ${collapsed ? '' : 'gap-3'} w-full text-left transition hover:opacity-80`}
       >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-sm font-semibold text-white cursor-pointer transition hover:ring-2 hover:ring-white/20">
-          {initials}
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-sm font-semibold text-white cursor-pointer transition hover:ring-2 hover:ring-white/20 overflow-hidden">
+          {userAvatar ? (
+            <img src={userAvatar} alt={userName} className="h-full w-full object-cover" />
+          ) : (
+            initial
+          )}
         </div>
         {!collapsed && (
           <div>
-            <p className="text-sm font-medium text-white">{MOCK_USER.name}</p>
+            <p className="text-sm font-medium text-white">{userName}</p>
           </div>
         )}
       </button>
@@ -194,17 +200,25 @@ function UserMenu({ initials, collapsed }: { initials: string; collapsed: boolea
           style={{ minWidth: '200px' }}
         >
           <div className="mb-3 flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-sm font-semibold text-white">
-              {initials}
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-sm font-semibold text-white overflow-hidden">
+              {userAvatar ? (
+                <img src={userAvatar} alt={userName} className="h-full w-full object-cover" />
+              ) : (
+                initial
+              )}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-white truncate">{MOCK_USER.name}</p>
-              <p className="text-xs text-white/40 truncate">{MOCK_USER.email}</p>
+              <p className="text-sm font-medium text-white truncate">{userName}</p>
+              <p className="text-xs text-white/40 truncate">{userEmail}</p>
             </div>
           </div>
           <div className="border-t border-white/5 pt-3">
             <button
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false)
+                logout()
+                navigate({ to: '/signin' })
+              }}
               className="btn-press flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-white/60 transition hover:bg-white/5 hover:text-white"
             >
               <HugeiconsIcon icon={Logout01Icon} size={16} />

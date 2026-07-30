@@ -3,14 +3,17 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { Mic01Icon, StopIcon, Loading03Icon } from '@hugeicons/core-free-icons'
 
 interface RecordButtonProps {
-  onRecordingComplete?: (duration: number) => void
+  onRecordingComplete?: (audioBlob: Blob, duration: number) => void
   size?: 'sm' | 'md' | 'lg'
 }
 
 export default function RecordButton({ onRecordingComplete, size = 'lg' }: RecordButtonProps) {
   const [state, setState] = useState<'idle' | 'recording' | 'processing'>('idle')
   const [seconds, setSeconds] = useState(0)
+  const [error, setError] = useState('')
   const intervalRef = useRef<ReturnType<typeof setInterval>>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef = useRef<Blob[]>([])
 
   useEffect(() => {
     if (state === 'recording') {
@@ -22,16 +25,56 @@ export default function RecordButton({ onRecordingComplete, size = 'lg' }: Recor
     }
   }, [state])
 
+  const startRecording = async () => {
+    setError('')
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+
+      // Pick a supported mime type
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+          ? 'audio/webm'
+          : undefined
+
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+      chunksRef.current = []
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data)
+      }
+
+      recorder.start()
+      mediaRecorderRef.current = recorder
+      setState('recording')
+    } catch {
+      setError('Microphone access denied')
+    }
+  }
+
+  const stopRecording = () => {
+    const recorder = mediaRecorderRef.current
+    if (!recorder) return
+
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    setState('processing')
+
+    recorder.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' })
+      // Stop all tracks to release the mic
+      recorder.stream.getTracks().forEach((t) => t.stop())
+      setState('idle')
+      onRecordingComplete?.(blob, seconds)
+    }
+
+    recorder.stop()
+  }
+
   const handleClick = () => {
     if (state === 'idle') {
-      setState('recording')
+      startRecording()
     } else if (state === 'recording') {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-      setState('processing')
-      setTimeout(() => {
-        setState('idle')
-        onRecordingComplete?.(seconds)
-      }, 1500)
+      stopRecording()
     }
   }
 
@@ -66,8 +109,11 @@ export default function RecordButton({ onRecordingComplete, size = 'lg' }: Recor
       {state === 'processing' && (
         <span className="text-xs text-white/40">Processing...</span>
       )}
-      {state === 'idle' && (
+      {state === 'idle' && !error && (
         <span className="text-xs text-white/30">Tap to record</span>
+      )}
+      {error && (
+        <span className="text-xs text-red-400">{error}</span>
       )}
     </div>
   )

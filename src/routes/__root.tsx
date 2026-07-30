@@ -10,6 +10,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
+import { AuthProvider } from '../lib/auth'
 
 import StoreDevtools from '../lib/demo-store-devtools'
 
@@ -85,7 +86,7 @@ function NotFound() {
           ))}
         </Link>
         <Link
-          to="/dashboard"
+          to="/home"
           className="group/dash btn-press inline-block rounded-full border border-white/10 bg-white/5 px-6 py-2.5 text-sm font-medium text-white/60 no-underline transition hover:-translate-y-0.5 hover:bg-white/10 hover:text-white"
         >
           {'Dashboard'.split('').map((char, i) => (
@@ -105,14 +106,15 @@ function NotFound() {
 
 function RootLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const isDashboard = pathname.startsWith('/dashboard')
+  const DASHBOARD_ROUTES = ['/home', '/diary', '/transcription', '/audio', '/speaking', '/settings', '/profile']
+  const isDashboard = DASHBOARD_ROUTES.some((r) => pathname === r || pathname.startsWith(r + '/'))
 
   return (
-    <>
+    <AuthProvider>
       {!isDashboard && <Header />}
       <Outlet />
       {!isDashboard && <Footer />}
-    </>
+    </AuthProvider>
   )
 }
 
@@ -121,6 +123,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script src="https://accounts.google.com/gsi/client" async defer />
         <HeadContent />
       </head>
       <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
