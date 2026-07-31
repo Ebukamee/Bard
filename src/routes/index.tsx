@@ -127,21 +127,22 @@ function HomePage() {
             your transcript. Built for speed, accuracy, and simplicity.
           </p>
 
-          {/* Video/demo placeholder */}
+          {/* Video demo */}
           <div
             className="reveal-zoom mx-auto max-w-3xl overflow-hidden rounded-2xl ring-1 ring-white/5 bg-[#161616]"
             style={{ '--delay': '350ms' } as React.CSSProperties}
           >
-            <div className="flex aspect-video items-center justify-center">
-              <div className="flex flex-col items-center gap-3">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/10">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="none">
-                    <polygon points="6,3 20,12 6,21" />
-                  </svg>
-                </div>
-                <span className="text-xs text-white/30">Watch demo</span>
-              </div>
-            </div>
+            <video
+              className="w-full aspect-video"
+              controls
+              muted
+              autoPlay
+              loop
+              playsInline
+              poster=""
+            >
+              <source src="/demo.mp4" type="video/mp4" />
+            </video>
           </div>
         </div>
       </section>
